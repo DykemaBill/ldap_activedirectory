@@ -1,4 +1,4 @@
-## Python-LDAP library
+## Python-LDAP library, https://www.python-ldap.org
 ## pip3 install python-ldap
 ## Masked password input
 ## pip3 install pwinput
@@ -10,6 +10,7 @@ class LDAP(ldap.ldapobject.LDAPObject,ldap.resiter.ResultProcessor):
 
 def ldap_login(conn_ldap, domain, account, password):
     try:
+        # https://www.python-ldap.org/en/python-ldap-3.4.3/reference/ldap.html?highlight=simple_#arguments-for-ldapv3-controls
         conn_ldap.simple_bind_s(account + "@" + domain, password)
     except ldap.INVALID_CREDENTIALS:
         print("Login failed!")
