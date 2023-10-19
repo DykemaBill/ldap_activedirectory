@@ -9,14 +9,18 @@ class LDAP(ldap.ldapobject.LDAPObject,ldap.resiter.ResultProcessor):
   pass
 
 def ldap_login(conn_ldap, domain, account, password):
-    print ("Domain: " + str(domain))
     try:
         conn_ldap.simple_bind_s(account + "@" + domain, password)
-        print("Logged in!")
-        return True
-    except:
+    except ldap.INVALID_CREDENTIALS:
         print("Login failed!")
         return False
+    except ldap.SERVER_DOWN:
+        print("Server appears to be down!")
+        return False
+    except ldap.LDAPError:
+        print("Unknown error!")
+        return False
+    return True
 
 def ldap_search(conn_ldap, ad_forest, search_term):
     if (len(search_term) < 1) or (search_term == "*"):
@@ -39,16 +43,20 @@ if __name__ == "__main__":
         #conn_ldap = ldap.initialize("ldap://" + server) # Without class creation to bring in resiter for search
         ad_conn_ldap = LDAP("ldap://" + ad_server)
         ad_conn_ldap.set_option(ldap.OPT_REFERRALS, 0)
+        ad_conn_ldap.set_option(ldap.OPT_NETWORK_TIMEOUT, 5) # Timeout in seconds
         # Read login
         ad_acct = input("Active Directory account ID: ")
         ad_pass = pwinput.pwinput(prompt="Active Directory password: ")
         # Login
+        print ("Attempting login to " + str(ad_server) + "...")
         login_successful = ldap_login(ad_conn_ldap, ad_domain, ad_acct, ad_pass)
         if login_successful:
             # Read search term
             ad_search = input("Term to search for: ")
             # Search
             ldap_search(ad_conn_ldap, ad_forest, ad_search)
+        # Disconnect from AD server
+        ad_conn_ldap.unbind_s()
     else:
         print ("Syntax:")
         print ("        " + sys.argv[0] + " [AD server] [AD domain in domain.ext format]")
